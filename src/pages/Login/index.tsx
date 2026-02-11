@@ -123,14 +123,14 @@ export default function Login() {
               <span className="text-sm text-zinc-400">OU</span>
               <hr className="w-full border-zinc-300" />
             </section>
-            {/* <section>
+            <section>
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   console.log(credentialResponse);
                 }}
                 onError={() => console.error("Login failed")}
               />
-            </section> */}
+            </section>
           </form>
         </section>
       </main>
