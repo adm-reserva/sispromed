@@ -1,13 +1,19 @@
 import axios from "axios";
-import {
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-  clearTokens,
-} from "./auth";
+import { getAccessToken, setAccessToken, clearAccessToken } from "./auth";
+import type { Acompanhamento } from "@/components/Acompanhamentos/columns";
+import type { Convenio } from "@/types/convenio";
+import type { Paciente } from "@/types/paciente";
+import type { Clinica } from "@/types/clinica";
+import type { Medico } from "@/types/medico";
+import type { FormFieldsAcompanhamento } from "@/components/Modals/acompanhamento";
+import type { TipoAcesso } from "@/types/tipoAcesso";
+import type { Lesao } from "@/types/lesao";
+import type { TratamentoRealizado } from "@/types/tratamentoRealizado";
+import type { Cateter } from "@/types/cateter";
 
 export const api = axios.create({
-  baseURL: "http://10.1.1.190:8080/",
+  baseURL: "http://localhost:8086",
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config: any) => {
@@ -20,56 +26,184 @@ api.interceptors.request.use((config: any) => {
   return config;
 });
 
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
+
 api.interceptors.response.use(
-  (response: any) => response,
-  async (error: any) => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
 
     if (!error.response || error.response.status !== 401) {
       return Promise.reject(error);
     }
 
-    if (originalRequest._retry) {
-      clearTokens();
+    if (originalRequest.url === "/refresh") {
+      clearAccessToken();
       window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    if (originalRequest._retry) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
     try {
-      const refresh_token = getRefreshToken();
+      if (!isRefreshing) {
+        isRefreshing = true;
 
-      if (!refresh_token) {
-        throw new Error("Sem refresh token");
+        refreshPromise = api
+          .post("/refresh")
+          .then(({ data }) => {
+            const newAccessToken = data.access_token;
+            setAccessToken(newAccessToken);
+            return newAccessToken;
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
       }
 
-      const { data } = await axios.post("http://localhost:9000/refresh", {
-        refresh_token,
-      });
+      const newAccessToken = await refreshPromise;
 
-      setTokens(data);
-
-      originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
       return api(originalRequest);
     } catch (err) {
-      clearTokens();
+      clearAccessToken();
       window.location.href = "/login";
       return Promise.reject(err);
     }
   }
 );
 
-export const efetuarLogin = async (usuario: string, senha: string) => {
-  const { data } = await api.post("login", {
-    usuario,
+export const efetuarLogin = async (email: string, senha: string) => {
+  const { data } = await api.post("/login", {
+    email,
     senha,
   });
-  setTokens(data);
+
+  setAccessToken(data.access_token);
 };
 
-export const efetuarTeste = async () => {
-  const { data } = await api.get("teste");
+export const efetuarLoginGoogle = async (id_token: string) => {
+  const { data } = await api.post("/login/google", {
+    id_token,
+  });
+
+  setAccessToken(data.access_token);
+};
+
+export const efetuarLogout = async () => {
+  await api.post("/logout");
+
+  clearAccessToken();
+  window.location.href = "/login";
+};
+
+export const consultarAcompanhamentos = async (): Promise<Acompanhamento[]> => {
+  const { data } = await api.get("/acompanhamentos");
+  return data;
+};
+
+export const consultarAcompanhamento = async (
+  id: number
+): Promise<Acompanhamento> => {
+  const { data } = await api.get(`/acompanhamentos/${id}`);
+  return data;
+};
+
+export const criarAcompanhamento = async (
+  body: FormFieldsAcompanhamento
+): Promise<object> => {
+  const { data } = await api.post("/acompanhamentos", body);
+  return data;
+};
+
+export const editarAcompanhamento = async (
+  id: number,
+  body: FormFieldsAcompanhamento
+): Promise<object> => {
+  const { data } = await api.put(`/acompanhamentos/${id}`, body);
+  return data;
+};
+
+export const excluirAcompanhamento = async (id: number): Promise<object> => {
+  const { data } = await api.delete(`/acompanhamentos/${id}`);
+  return data;
+};
+
+export const consultarPacientes = async (
+  search: string = ""
+): Promise<Paciente[]> => {
+  const { data } = await api.get("/pacientes", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarClinicas = async (
+  search: string = ""
+): Promise<Clinica[]> => {
+  const { data } = await api.get("/clinicas", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarConvenios = async (
+  search: string = ""
+): Promise<Convenio[]> => {
+  const { data } = await api.get("/convenios", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarMedicos = async (
+  especialidade: number,
+  search: string = ""
+): Promise<Medico[]> => {
+  const { data } = await api.get("/medicos", {
+    params: { especialidade, search },
+  });
+  return data;
+};
+
+export const consultarTiposAcessos = async (
+  search: string = ""
+): Promise<TipoAcesso[]> => {
+  const { data } = await api.get("/tipos-acessos", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarLesoes = async (
+  search: string = ""
+): Promise<Lesao[]> => {
+  const { data } = await api.get("/lesoes", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarTratamentosRealizados = async (
+  search: string = ""
+): Promise<TratamentoRealizado[]> => {
+  const { data } = await api.get("/tratamentos-realizados", {
+    params: { search },
+  });
+  return data;
+};
+
+export const consultarCateteres = async (
+  search: string = ""
+): Promise<Cateter[]> => {
+  const { data } = await api.get("/cateteres", {
+    params: { search },
+  });
   return data;
 };

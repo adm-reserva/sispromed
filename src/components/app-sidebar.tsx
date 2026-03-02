@@ -1,4 +1,13 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import {
+  Bandage,
+  Calendar,
+  ChartPie,
+  FileText,
+  Handshake,
+  Home,
+  Hospital,
+  Users,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -11,32 +20,61 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-// Menu items.
 const items = [
+  // {
+  //   title: "Agenda",
+  //   url: "/agenda",
+  //   icon: Calendar,
+  // },
   {
-    title: "Home",
-    url: "#",
-    icon: Home,
+    title: "Dashboard",
+    url: "/vascular/dashboard",
+    icon: ChartPie,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: "Acompanhamentos",
+    url: "/vascular/acompanhamentos",
+    icon: FileText,
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
+    title: "Pacientes",
+    url: "/vascular/pacientes",
+    icon: Users,
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
+    title: "Convênios",
+    url: "/vascular/convenios",
+    icon: Handshake,
   },
   {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
+    title: "Clínicas",
+    url: "/vascular/clinicas",
+    icon: Hospital,
+  },
+  {
+    title: "Nefrologistas",
+    url: "/vascular/nefrologistas",
+    icon: Handshake,
+  },
+  {
+    title: "Tipos de acesso",
+    url: "/vascular/tipos-acesso",
+    icon: Bandage,
+  },
+  {
+    title: "Cateteres",
+    url: "/vascular/cateteres",
+    icon: Handshake,
+  },
+  {
+    title: "Lesões",
+    url: "/vascular/lesoes",
+    icon: Handshake,
+  },
+  {
+    title: "Tratamentos",
+    url: "/vascular/tratamentos-realizados",
+    icon: Handshake,
   },
 ];
 
@@ -45,7 +83,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>SISPROMED</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
